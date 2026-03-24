@@ -67,7 +67,15 @@ public class NextDnsRewriteService {
             ));
 
     Log.io("Saving %s new rewrites to NextDNS...".formatted(uniqueRewriteDtos.size()));
-    NextDnsRateLimitedApiProcessor.callApi(uniqueRewriteDtos, nextDnsRewriteClient::saveRewrite);
+
+    java.util.List<CreateRewriteDto> limitedRewriteDtos = uniqueRewriteDtos.stream()
+            .limit(25)
+            .toList();
+
+    Log.io("Processing only %s rewrites in this run to avoid NextDNS rate limit..."
+            .formatted(limitedRewriteDtos.size()));
+
+    NextDnsRateLimitedApiProcessor.callApi(limitedRewriteDtos, nextDnsRewriteClient::saveRewrite);
 }
 
     public void removeAll() {
