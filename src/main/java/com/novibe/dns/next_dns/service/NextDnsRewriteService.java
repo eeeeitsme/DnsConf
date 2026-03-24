@@ -56,9 +56,19 @@ public class NextDnsRewriteService {
     }
 
     public void saveRewrites(List<CreateRewriteDto> createRewriteDtos) {
-        Log.io("Saving %s new rewrites to NextDNS...".formatted(createRewriteDtos.size()));
-        NextDnsRateLimitedApiProcessor.callApi(createRewriteDtos, nextDnsRewriteClient::saveRewrite);
-    }
+    List<CreateRewriteDto> uniqueRewriteDtos = createRewriteDtos.stream()
+            .collect(java.util.stream.Collectors.collectingAndThen(
+                    java.util.stream.Collectors.toMap(
+                            CreateRewriteDto::name,
+                            dto -> dto,
+                            (first, second) -> first
+                    ),
+                    map -> new java.util.ArrayList<>(map.values())
+            ));
+
+    Log.io("Saving %s new rewrites to NextDNS...".formatted(uniqueRewriteDtos.size()));
+    NextDnsRateLimitedApiProcessor.callApi(uniqueRewriteDtos, nextDnsRewriteClient::saveRewrite);
+}
 
     public void removeAll() {
         Log.io("Fetching existing rewrites from NextDNS");
